@@ -19,9 +19,10 @@ mqttClient.on("connect", () => {
 
   setInterval(() => {
     const payload = JSON.stringify({
-      id: Math.floor(Math.random() * 3),
+      id: Math.floor(Math.random() * 1),
       humidity: Math.floor(Math.random() * 30),
       lum: Math.floor(Math.random() * 100),
+      openValve: false
     });
 
     mqttClient.publish("devices/test", payload);
@@ -30,13 +31,33 @@ mqttClient.on("connect", () => {
 
 mqttClient.on("message", (topic, message) => {
   const device = JSON.parse(message.toString());
-  devices[device.id] = device;
+  const currDev = devices[device.id] || {};
+
+  let updatedDev = {
+    ...currDev,
+    ...device
+  }
+
+  if (updatedDev.humidity < 20) {
+    updatedDev.openValve = true;
+  } else {
+    updatedDev.openValve = false;
+  }
+
+  devices[device.id] = updatedDev;
+
+  mqttClient.publish(
+    `devices/${device.id}/control`,
+    JSON.stringify({
+      openValve: updatedDev.openValve,
+    })
+  );
 
   if (io) {
     io.emit("devices", Object.values(devices));
   }
 
-  console.log(device);
+  console.log(updatedDev);
 });
 
 function getDevices() {
