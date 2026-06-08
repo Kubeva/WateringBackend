@@ -8,7 +8,7 @@
   },
   "name": "wateringbackend",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "api.js",
   "scripts": {
     "start": "node api.js"
   },
